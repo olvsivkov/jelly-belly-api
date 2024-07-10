@@ -1,165 +1,50 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 
-// Интерфесы ------- //
-interface BeansData {
-  beanId: number;
-  groupName: string[];
-  ingredients: string[];
-  flavorName: string;
-  description: string;
-  colorGroup: string;
-  backgroundColor: string;
-  imageUrl: string;
-  glutenFree: boolean;
-  sugarFree: boolean;
-  seasonal: boolean;
-  kosher: boolean;
-}
+import { HistoryDataInterface } from './interfaces/interfaces';
+import { BeansData } from './interfaces/interfaces';
+import { FactsDataInterface } from './interfaces/interfaces';
+import { RecipesDataInterface } from './interfaces/interfaces';
+import { CombinationsDataInterface } from './interfaces/interfaces';
+import { PageNameTypes } from './interfaces/interfaces';
 
-interface HistoryData {
-  mileStoneId: number;
-  year: number;
-  description: string;
-}
+import Navbar from './pages/navbar/navbar';
+import BeanList from './pages/beanList/beanList';
+import HistoryData from './pages/history/historyData';
+import FactsData from './pages/facts/facts';
+import RecipesData from './pages/recipes/recipes';
+import CombinationsData from './pages/combinations/combinations';
 
-interface FactsData {
-  factId: number;
-  title: string;
-  description: string;
-}
-
-interface RecipesData {
-  recipeId: number;
-  name: string;
-  description: string;
-  prepTime: string;
-  cookTime: string;
-  totalTime: string;
-  makingAmount: string;
-  imageUrl: string;
-  ingredients: string[];
-  additions1: string[];
-  additions2: string[];
-  additions3: string[];
-  directions: string[];
-  tips: string[];
-}
-
-interface CombinationsData {
-  combinationId: number;
-  name: string;
-  tag: string;
-}
-
-interface HandleTabChange {
-  handleTabChange: (tab: 'beans' | 'history' | 'facts' | 'recipes' | 'combinations') => void;
-}
-
-
-
-
-
-
-
-// компоненты лицевой станицы -- ///
-
-// Компонент для отображения списка бобов
-function BeanList({ beans }: { beans: BeansData[] }) {
-  return (
-    <ul>
-      {beans.map((bean) => (
-        <li key={bean.beanId}>{bean.flavorName}</li>
-      ))}
-    </ul>
-  );
-}
-
-function HistoryData({ history }: { history: HistoryData[] }) {
-  return (
-    <ul>
-      {history.map((history) => (
-        <li key={history.mileStoneId}>{history.description}</li>
-      ))}
-    </ul>
-  );
-}
-
-function FactsData({ facts }: { facts: FactsData[] }) {
-  return (
-    <ul>
-      {facts.map((facts) => (
-        <li key={facts.factId}>{facts.description}</li>
-      ))}
-    </ul>
-  );
-}
-
-function RecipesData({ recipes }: { recipes: RecipesData[] }) {
-  return (
-    <ul>
-      {recipes.map((recipe) => (
-        <li key={recipe.recipeId}>{recipe.description}</li>
-      ))}
-    </ul>
-  );
-}
-
-function CombinationsData({ combinations }: { combinations: CombinationsData[] }) {
-  return (
-    <ul>
-      {combinations.map((combination) => (
-        <li key={combination.combinationId}>{combination.name}</li>
-      ))}
-    </ul>
-  );
-}
-
-
-
-
-// Навигация -- //
-
-function Navbar({handleTabChange}: HandleTabChange) {
-
-  return (
-    <nav>
-      <button onClick={() => handleTabChange('beans')}>Beans</button>
-      <button onClick={() => handleTabChange('history')}>History</button>
-      <button onClick={() => handleTabChange('facts')}>Facts</button>
-      <button onClick={() => handleTabChange('recipes')}>Recipes</button>
-      <button onClick={() => handleTabChange('combinations')}>Combinations</button>
-    </nav>
-  );
-}
+import { API_URL } from './API/config';
 
 function App() {
 
   const [beans, setBeans] = useState<BeansData[]>([]);
-  const [history, setHistory] = useState<HistoryData[]>([]);
-  const [facts, setFacts] = useState<FactsData[]>([]);
-  const [recipes, setRecipes] = useState<RecipesData[]>([]);
-  const [combinations, setCombinations] = useState<CombinationsData[]>([]);
-
-//--------------------------------------------------------------------------------------------------------------//
-  const [selectedTab, setSelectedTab] = useState<'beans' | 'history' | 'facts' | 'recipes' | 'combinations'>('beans');
+  const [history, setHistory] = useState<HistoryDataInterface[]>([]);
+  const [facts, setFacts] = useState<FactsDataInterface[]>([]);
+  const [recipes, setRecipes] = useState<RecipesDataInterface[]>([]);
+  const [combinations, setCombinations] = useState<CombinationsDataInterface[]>([]);
+  const [selectedTab, setSelectedTab] = useState<PageNameTypes>('beans');
 
   // Функция для изменения выбранного таба
-  function handleTabChange(tab: 'beans' | 'history' | 'facts' | 'recipes' | 'combinations') {
+  function handleTabChange(tab: PageNameTypes) {
     setSelectedTab(tab);
   }
-//--------------------------------------------------------------------------------------------------------------//
+
+  function putDataOnSetter(section: string, data: any){
+    if(section === 'beans') setBeans(data.items);
+    if(section === 'MileStones') setHistory(data.items);     
+    if(section === 'facts') setFacts(data.items);     
+    if(section === 'recipes') setRecipes(data.items);     
+    if(section === 'combinations') setCombinations(data.items);   
+  }
 
   // Функции для выполнения запросов к API
   async function fetchBeansData(section: string, pageSize: string) {
     try {
-      const response = await fetch(`https://jellybellywikiapi.onrender.com/api/${section}?pageIndex=1&pageSize=${pageSize}`);
+      const response = await fetch(`${API_URL}${section}?pageIndex=1&pageSize=${pageSize}`);
       const data = await response.json();
-      if(section === 'beans') setBeans(data.items);
-      if(section === 'MileStones') setHistory(data.items);     
-      if(section === 'facts') setFacts(data.items);     
-      if(section === 'recipes') setRecipes(data.items);     
-      if(section === 'combinations') setCombinations(data.items);     
+      putDataOnSetter(section, data)
     } catch (error) {
       console.error('Error fetching beans:', error);
     }
